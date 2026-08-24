@@ -1,1 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-gray-900 text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECU & DTC Master Web</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF pour les exports PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Feuille de style personnalisée -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-full flex flex-col font-sans">
+    <header class="bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-blue-400">ECU & DTC Master</h1>
+        <button id="btnToggleMaster" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-sm">Mode User</button>
+    </header>
 
+    <main class="flex-1 overflow-y-auto p-4 max-w-4xl mx-auto w-full">
+        <nav class="flex border-b border-gray-700 mb-6">
+            <button id="btnTabEcu" data-tab="ecuTab" class="tab-btn border-b-2 border-blue-500 py-2 px-4 font-semibold text-blue-400">ECU Bosch</button>
+            <button id="btnTabDtc" data-tab="dtcTab" class="tab-btn py-2 px-4 text-gray-400">DTC / Renault DF</button>
+            <button id="btnTabCatalog" data-tab="catalogTab" class="tab-btn py-2 px-4 text-gray-400">Catalogue</button>
+            <button id="btnTabSettings" data-tab="settingsTab" class="tab-btn py-2 px-4 text-gray-400">Réglages API</button>
+            <button id="masterTabBtn" data-tab="masterTab" class="tab-btn hidden py-2 px-4 text-yellow-400 font-bold">Espace Master</button>
+        </nav>
+
+        <!-- Recherche ECU -->
+        <section id="ecuTab" class="tab-content">
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-4">
+                <label class="block mb-2 text-sm font-medium" for="ecuInput">Numéro Bosch (ex: 0281 010 350)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="ecuInput" placeholder="Saisir le numéro..." class="flex-1 bg-gray-900 border border-gray-600 rounded p-2 text-white">
+                    <button id="btnSearchEcu" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-medium">Identifier</button>
+                </div>
+            </div>
+            <div id="ecuResult" class="bg-gray-800 p-4 rounded-lg border border-gray-700 min-h-[120px] whitespace-pre-wrap"></div>
+        </section>
+
+        <!-- Codes DTC / DF -->
+        <section id="dtcTab" class="tab-content hidden">
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-4">
+                <label class="block mb-2 text-sm font-medium" for="dtcInput">Code Défaut (P0300 ou DF025)</label>
+                <input type="text" id="dtcInput" placeholder="Saisir le code..." class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white mb-3">
+                <div class="flex gap-3">
+                    <button id="btnSearchPCode" class="bg-blue-600 hover:bg-blue-500 flex-1 py-2 rounded font-medium">Recherche Code P</button>
+                    <button id="btnSearchDFCode" class="bg-indigo-600 hover:bg-indigo-500 flex-1 py-2 rounded font-medium">Convertir Renault DF -> P</button>
+                </div>
+            </div>
+            <div id="dtcResult" class="bg-gray-800 p-4 rounded-lg border border-gray-700 min-h-[120px] whitespace-pre-wrap mb-3"></div>
+            <div id="dtcExportBtns" class="hidden flex gap-3">
+                <button id="btnExportPdf" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded text-sm">Télécharger PDF</button>
+                <button id="btnShareResult" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm">Partager / Copier</button>
+            </div>
+        </section>
+
+        <!-- Catalogue -->
+        <section id="catalogTab" class="tab-content hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-lg font-bold text-blue-400 mb-1">Reprogrammation & Clone ECU</h3>
+                <p class="text-sm text-gray-300">Service de clonage EDC15, EDC16, EDC17, MDG1 sous 24h. Analyse complète de vos fichiers.</p>
+            </div>
+        </section>
+
+        <!-- Réglages OpenAI -->
+        <section id="settingsTab" class="tab-content hidden">
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-lg font-bold mb-3">Clé API OpenAI Personnelle</h3>
+                <input type="password" id="apiKeyInput" placeholder="sk-..." class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white mb-3">
+                <button id="btnSaveApiKey" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded">Enregistrer la clé</button>
+            </div>
+        </section>
+
+        <!-- Master -->
+        <section id="masterTab" class="tab-content hidden space-y-4">
+            <div class="bg-gray-800 p-4 rounded-lg border border-yellow-600">
+                <h3 class="text-lg font-bold text-yellow-400 mb-3">Master: Ajouter ECU Bosch</h3>
+                <input type="text" id="mEcuNum" placeholder="N° Bosch" class="w-full bg-gray-900 border border-gray-600 rounded p-2 mb-2">
+                <input type="text" id="mEcuFamily" placeholder="Famille (ex: EDC17C64)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 mb-2">
+                <input type="text" id="mEcuCompat" placeholder="Compatibilités" class="w-full bg-gray-900 border border-gray-600 rounded p-2 mb-3">
+                <button id="btnMasterAddEcu" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded font-bold text-black">Publier ECU</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- JS Applicatif externe -->
+    <script src="app.js"></script>
+</body>
+</html>
